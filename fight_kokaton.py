@@ -55,6 +55,7 @@ class Bird:
         self.img = __class__.imgs[(+5, 0)]
         self.rct: pg.Rect = self.img.get_rect()
         self.rct.center = xy
+        self.dire = (+5, 0)  # こうかとんの向きを表すタプル
 
     def change_img(self, num: int, screen: pg.Surface):
         """
@@ -68,6 +69,7 @@ class Bird:
     def update(self, key_lst: list[bool], screen: pg.Surface):
         """
         押下キーに応じてこうかとんを移動させる
+        合計移動量sum_mvが[0,0]でない時，self.direをsum_mvの値で更新
         引数1 key_lst：押下キーの真理値リスト
         引数2 screen：画面Surface
         """
@@ -79,70 +81,14 @@ class Bird:
         self.rct.move_ip(sum_mv)
         if check_bound(self.rct) != (True, True):
             self.rct.move_ip(-sum_mv[0], -sum_mv[1])
-        if not (sum_mv[0] == 0 and sum_mv[1] == 0):
-            self.img = __class__.imgs[tuple(sum_mv)]
+        
+        if sum_mv != [0, 0]:
+            self.dire = tuple(sum_mv)
+
+        if self.dire in __class__.imgs:
+            self.img = __class__.imgs[self.dire]
+        
         screen.blit(self.img, self.rct)
-
-
-class Beam:
-    """
-    こうかとんが放つビームに関するクラス
-    """
-    def __init__(self, bird: Bird):
-        """
-        ビーム画像Surfaceを生成する
-        引数 bird：ビームを放つこうかとん（Birdインスタンス）
-        """
-        self.img = pg.image.load(f"fig/beam.png")
-        self.rct = self.img.get_rect()
-        self.rct.centery = bird.rct.centery  # こうかとんの中心縦座標をビームの中心縦座標に設定
-        self.rct.left = bird.rct.right  # こうかとん右座標をビーム左座標に設定
-        self.vx, self.vy = +5, 0
-
-    def update(self, screen: pg.Surface) -> bool:
-        """
-        ビームを速度ベクトルself.vx, self.vyに基づき移動させる
-        画面外に出たらFalseを返す
-        引数 screen：画面Surface
-        """
-        if check_bound(self.rct) == (True, True):
-            self.rct.move_ip(self.vx, self.vy)
-            screen.blit(self.img, self.rct)
-            return True
-        else:
-            return False
-
-
-class Bomb:
-    """
-    爆弾に関するクラス
-    """
-    def __init__(self, color: tuple[int, int, int], rad: int):
-        """
-        引数に基づき爆弾円Surfaceを生成する
-        引数1 color：爆弾円の色タプル
-        引数2 rad：爆弾円の半径
-        """
-        self.img = pg.Surface((2 * rad, 2 * rad))
-        pg.draw.circle(self.img, color, (rad, rad), rad)
-        self.img.set_colorkey((0, 0, 0))
-        self.rct = self.img.get_rect()
-        self.rct.center = random.randint(0, WIDTH), random.randint(0, HEIGHT)
-        self.vx, self.vy = +5, +5
-
-    def update(self, screen: pg.Surface):
-        """
-        爆弾を速度ベクトルself.vx, self.vyに基づき移動させる
-        引数 screen:画面Surface
-        """
-        yoko, tate = check_bound(self.rct)
-        if not yoko:
-            self.vx *= -1
-        if not tate:
-            self.vy *= -1
-        self.rct.move_ip(self.vx, self.vy)
-        screen.blit(self.img, self.rct)
-
 class Explosion:
     """
     爆発エフェクトに関するクラス
