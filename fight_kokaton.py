@@ -133,7 +133,7 @@ class Bomb:
     def update(self, screen: pg.Surface):
         """
         爆弾を速度ベクトルself.vx, self.vyに基づき移動させる
-        引数 screen：画面Surface
+        引数 screen:画面Surface
         """
         yoko, tate = check_bound(self.rct)
         if not yoko:
@@ -142,6 +142,38 @@ class Bomb:
             self.vy *= -1
         self.rct.move_ip(self.vx, self.vy)
         screen.blit(self.img, self.rct)
+
+class Explosion:
+    """
+    爆発エフェクトに関するクラス
+    """
+    imgs = [
+        pg.image.load("fig/explosion.gif"),
+        pg.transform.flip(pg.image.load("fig/explosion.gif"), True, False)
+    ]
+
+    def __init__(self, center: tuple[int, int]):
+        """
+        引数 center:爆発の中心座標
+        """
+        self.images = self.imgs
+        self.image_index = 0
+        self.image = self.images[self.image_index]
+        self.rect = self.image.get_rect()
+        self.rect.center = center
+        self.life = 30  # 爆発の表示時間
+
+    def update(self, screen: pg.Surface):
+        """
+        爆発を描画する
+        引数 screen:画面Surface
+        """
+        if self.life > 0:
+            screen.blit(self.image, self.rect)
+            self.life -= 1
+            self.image_index = (self.image_index + 1) % len(self.images)
+            self.image = self.images[self.image_index]
+
 
 
 class Score:
@@ -177,6 +209,8 @@ class Score:
         """
         self.img = self.fonto.render(f"Score: {self.score}", 0, self.color)
         screen.blit(self.img, self.rct)
+
+
 
 
 def main():
