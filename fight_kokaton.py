@@ -4,7 +4,6 @@ import sys
 import time
 import pygame as pg
 
-
 WIDTH = 1100  # ゲームウィンドウの幅
 HEIGHT = 650  # ゲームウィンドウの高さ
 NUM_OF_BOMBS = 5  # 爆弾の個数
@@ -89,7 +88,7 @@ class Beam:
     """
     こうかとんが放つビームに関するクラス
     """
-    def __init__(self, bird:"Bird"):
+    def __init__(self, bird: Bird):
         """
         ビーム画像Surfaceを生成する
         引数 bird：ビームを放つこうかとん（Birdインスタンス）
@@ -100,14 +99,18 @@ class Beam:
         self.rct.left = bird.rct.right  # こうかとん右座標をビーム左座標に設定
         self.vx, self.vy = +5, 0
 
-    def update(self, screen: pg.Surface):
+    def update(self, screen: pg.Surface) -> bool:
         """
         ビームを速度ベクトルself.vx, self.vyに基づき移動させる
+        画面外に出たらFalseを返す
         引数 screen：画面Surface
         """
         if check_bound(self.rct) == (True, True):
             self.rct.move_ip(self.vx, self.vy)
-            screen.blit(self.img, self.rct)    
+            screen.blit(self.img, self.rct)
+            return True
+        else:
+            return False
 
 
 class Bomb:
@@ -120,7 +123,7 @@ class Bomb:
         引数1 color：爆弾円の色タプル
         引数2 rad：爆弾円の半径
         """
-        self.img = pg.Surface((2*rad, 2*rad))
+        self.img = pg.Surface((2 * rad, 2 * rad))
         pg.draw.circle(self.img, color, (rad, rad), rad)
         self.img.set_colorkey((0, 0, 0))
         self.rct = self.img.get_rect()
@@ -139,6 +142,7 @@ class Bomb:
             self.vy *= -1
         self.rct.move_ip(self.vx, self.vy)
         screen.blit(self.img, self.rct)
+
 
 class Score:
     """
@@ -181,8 +185,8 @@ def main():
     bg_img = pg.image.load("fig/pg_bg.jpg")
     bird = Bird((300, 200))
     beam = None
-    # 爆弾のリストを生成
-    bombs = [Bomb((255, 0, 0), 10) for _ in range(NUM_OF_BOMBS)]
+    
+    bombs = [Bomb((255, 0, 0), 10) for _ in range(NUM_OF_BOMBS)]  #爆弾リスト
     clock = pg.time.Clock()
     tmr = 0
 
@@ -198,6 +202,16 @@ def main():
         
         screen.blit(bg_img, [0, 0])
         
+        for bomb in bombs:
+            if bird.rct.colliderect(bomb.rct):
+                # ゲームオーバー時に，こうかとん画像を切り替え，1秒間表示させる
+                # bird.change_img(8, screen)
+                fonto = pg.font.Font(None, 80)
+                txt = fonto.render("Game Over", True, (255, 0, 0))
+                screen.blit(txt, [WIDTH/2-150, HEIGHT/2])
+                pg.display.update()
+                time.sleep(5)
+                return
 
         for i in range(len(bombs)):
             if beam is not None:
